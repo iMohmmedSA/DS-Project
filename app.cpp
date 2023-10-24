@@ -4,43 +4,17 @@ using namespace std;
 
 #define eeDebug 2
 
-class Point
-{
-public:
-    int x;
-    int y;
-    Point(int x, int y)
-    {
-        this->x = x;
-        this->y = y;
-    }
-};
-
 class Maze
 {
-    enum LAST_MOVE
-    {
-        UP,
-        DOWN,
-        LEFT,
-        RIGHT,
-        NONE
-    };
 
 public:
     int **maze;
     int size;
-    Point *position;
-    int moveTimeout;
-    LAST_MOVE lastMove;
 
     Maze(int size)
     {
-        this->position = new Point(0, 0);
         this->size = size;
         this->maze = new int *[size];
-        this->moveTimeout = 0;
-        this->lastMove = NONE;
 
         srand(time(0));
         for (int i = 0; i < size; i++)
@@ -82,146 +56,101 @@ public:
         return *this;
     }
 
+
+    bool isSafe(int x, int y) const {
+        return (x >= 0 && x < size && y >= 0 && y < size && maze[x][y] == 0);
+    }
+
     // Movement
-    Maze moveUp()
+    bool moveUp(int x, int y)
     {
-        if (eeDebug == 1 && this->position->x > 0)
-            cout << "UP stat: " << maze[this->position->x - 1][this->position->y] << endl;
-        if (this->position->x - 1 <= 0)
+        if (isSafe(x - 1, y))
         {
-            if (eeDebug == 1)
-                cout << "You can't move up" << endl;
-            return *this;
+            return true;
         }
-        if (maze[this->position->x - 1][this->position->y] == 0)
-        {
-            if (eeDebug == 1)
-                cout << "Moving up" << endl;
-            this->position->x--;
-            this->moveTimeout++;
-            lastMove = UP;
-        }
-        return *this;
+        return false;
     }
 
-    Maze moveDown()
+    bool moveDown(int x, int y)
     {
-        if (eeDebug == 1 && this->position->x < this->size - 1)
-            cout << "DOWN stat: " << maze[this->position->x + 1][this->position->y] << endl;
-        if (this->position->x + 1 >= this->size - 1)
+        if (isSafe(x + 1, y))
         {
-            if (eeDebug == 1)
-                cout << "You can't move down" << endl;
-            return *this;
+            return true;
         }
-        if (maze[this->position->x + 1][this->position->y] == 0)
-        {
-            if (eeDebug == 1)
-                cout << "Moving down" << endl;
-            this->position->x++;
-            this->moveTimeout++;
-            lastMove = DOWN;
-
-            if (eeDebug == 2)
-                cout << "Point:" << this->position->x << "y:" << this->position->y << endl;
-        }
-        return *this;
+        return false;
     }
 
-    Maze moveRight()
+    bool moveLeft(int x, int y)
     {
-        if (eeDebug == 1 && this->position->y < this->size - 1)
-            cout << "RIGHT stat: " << maze[this->position->x][this->position->y + 1] << endl;
-        if (this->position->y + 1 >= this->size - 1)
+        if (isSafe(x, y - 1))
         {
-            if (eeDebug == 1)
-                cout << "You can't move right" << endl;
-            return *this;
+            return true;
         }
-        if (maze[this->position->x][this->position->y + 1] == 0)
-        {
-            if (eeDebug == 1)
-                cout << "Moving right" << endl;
-            this->position->y++;
-            this->moveTimeout++;
-            lastMove = RIGHT;
-            if (eeDebug == 2)
-                cout << "Point:" << this->position->x << "y:" << this->position->y << endl;
-        }
-        return *this;
+        return false;
     }
 
-    Maze moveLeft()
+    bool moveRight(int x, int y)
     {
-        if (eeDebug == 1 && this->position->y > 0)
-            cout << "LEFT stat: " << maze[this->position->x][this->position->y - 1] << endl;
-        if (this->position->y - 1 <= 0)
+        if (isSafe(x, y + 1))
         {
-            if (eeDebug == 1)
-                cout << "You can't move left" << endl;
-            return *this;
+            return true;
         }
-        if (maze[this->position->x][this->position->y - 1] == 0)
-        {
-            if (eeDebug == 1)
-                cout << "Moving left" << endl;
-            this->position->y--;
-            this->moveTimeout++;
-            lastMove = LEFT;
-        }
-        return *this;
+        return false;
     }
 
     Maze solveMaze()
     {
-        // Move from the start to down right
-        while (this->position->x != this->size - 1 || this->position->y != this->size - 1)
-        {
-            this->moveDown();
-            this->moveRight();
-            if (this->position->x == size - 1 && this->position->y == size - 1)
+        if (solveMaze(0, 0)){
+            cout << "Solution:" << endl;
+            for (int i = 0; i < this->size; i++)
             {
-                cout << "You solved the maze!" << endl;
-                break;
-            }
-            else if (this->moveTimeout++ > 100)
-            {
-                cout << "Timeout at x:" << this->position->x << "y:" << this->position->y << endl;
-                maze[this->position->x][this->position->y] = 2;
-                switch (this->lastMove)
+                cout << " ";
+                for (int j = 0; j < this->size; j++)
                 {
-                case UP:
-                    this->moveUp();
-                    break;
-                case DOWN:
-                    this->moveDown();
-                    break;
-                case LEFT:
-                    this->moveLeft();
-                    break;
-                case RIGHT:
-                    this->moveRight();
-                    break;
-                default:
-                cout << "EE" << endl;
-                    break;
+                    if (i == size - 1 && j == size - 1) {
+                        cout << "2 ";
+                    } else {
+                        cout << maze[i][j] << " ";
+                    }
                 }
-                this->displayMaze();
-                if (maze[this->position->x][this->position->y] == 2)
-                {
-                    cout << "You can't solve the maze!" << endl;
-                    break;
-                }
-                this->solveMaze();
-                break;
+                cout << endl;
             }
+        } else {
+            cout << "No solution" << endl;
         }
         return *this;
+    }
+private:
+    bool solveMaze(int x, int y){
+        if (x == size - 1 && y == size - 1) {return true;}
+        int xx = x;
+        int yy = y;
+        if (moveUp(xx, yy)) {
+            maze[xx][yy] = 2;
+            if (solveMaze(xx - 1, yy)) {return true;}
+            maze[xx][yy] = 0;
+        }
+        if (moveDown(xx, yy)) {
+            maze[xx][yy] = 2;
+            if (solveMaze(xx + 1, yy)) {return true;}
+            maze[xx][yy] = 0;
+        }
+        if (moveLeft(xx, yy)) {
+            maze[xx][yy] = 2;
+            if (solveMaze(xx, yy - 1)) {return true;}
+            maze[xx][yy] = 0;
+        }
+        if (moveRight(xx, yy)) {
+            maze[xx][yy] = 2;
+            if (solveMaze(xx, yy + 1)) {return true;}
+            maze[xx][yy] = 0;
+        }
+        return false;
     }
 };
 
 int main()
 {
-    Maze maze = Maze(10).displayMaze().solveMaze();
+    Maze maze = Maze(3).displayMaze().solveMaze();
     return 0;
 }
